@@ -6,18 +6,29 @@ const profileModal = new bootstrap.Modal('#profileModal');
 const firstNameInput = <HTMLInputElement>document.getElementById('firstName')!;
 const lastNameInput = <HTMLInputElement> document.getElementById('lastName')!;
 const profileForm = <HTMLFormElement>document.getElementById('profileForm');
+const messages = document.getElementById('messages')!;
+const messageForm = document.getElementById('messageForm')!;
+const messageInput = <HTMLInputElement>document.getElementById('message');
+
 
 interface GetProfileResponse {
-  email:string,
-  firstName:string,
-  lastName:string,
+  email:string;
+  firstName:string;
+  lastName:string;
+  _id:string;
+}
+
+interface Post {
+  datetime:string;
+  message:string;
+  user:GetProfileResponse;
+  userId:string;
   _id:string;
 }
 
 const run = async () => {
   const response = await fetch(baseUrl + '/profile');
   const user = await response.json();
-
 
   userNameH3.innerText = user.firstName + ' ' + user.lastName;
 
@@ -45,7 +56,48 @@ const run = async () => {
         alert('Check!');
       }
     });
+
   });
+
+  messageForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const message = messageInput.value;
+
+    const body = new URLSearchParams();
+    body.append('message', message);
+
+    try{
+      await fetch(baseUrl+ '/posts', {method:'POST',body});
+    }catch (e){
+      alert('No message sent');
+    }
+  });
+
+  let lastDate = '';
+
+  setInterval(async ()=> {
+    let url = baseUrl + '/posts';
+
+    if(lastDate) {
+      url+= '?datetime=' + lastDate;
+    }
+
+    const response = await fetch(url);
+    const posts: Post[] = await response.json();
+
+    if(posts.length > 0) {
+      lastDate = posts[posts.length-1].datetime;
+    }
+
+    for(const post of posts) {
+      const message = document.createElement('div');
+      message.innerHTML =`
+      <strong>${post.user.firstName + ' '+ post.user.lastName} said: </strong>
+      <blockquote>${post.message}</blockquote>`;
+      message.className = 'card card-body';
+      messages.prepend(message);
+    }
+  }, 3000);
 };
 
 
