@@ -7,7 +7,6 @@ const firstNameInput = <HTMLInputElement>document.getElementById('firstName')!;
 const lastNameInput = <HTMLInputElement> document.getElementById('lastName')!;
 const profileForm = <HTMLFormElement>document.getElementById('profileForm');
 
-
 interface GetProfileResponse {
   email:string,
   firstName:string,
@@ -19,6 +18,7 @@ const run = async () => {
   const response = await fetch(baseUrl + '/profile');
   const user = await response.json();
 
+
   userNameH3.innerText = user.firstName + ' ' + user.lastName;
 
   editProfileBtn.addEventListener('click',  () => {
@@ -26,9 +26,24 @@ const run = async () => {
     firstNameInput.value = user.firstName;
     lastNameInput.value = user.lastName;
 
-    profileForm.addEventListener('submit', e => {
+    profileForm.addEventListener('submit', async e => {
       e.preventDefault();
-      console.log('something');
+      const firstName = firstNameInput.value;
+      const lastName = lastNameInput.value;
+
+      const body = new URLSearchParams();
+      body.append('firstName', firstName);
+      body.append('lastName', lastName);
+
+      try {
+        await fetch(baseUrl + '/profile', {method:'POST', body});
+        profileModal.hide();
+        userNameH3.innerText = firstName + ' ' + lastName;
+        user.firstName = firstName;
+        user.lastName = lastName;
+      } catch (e){
+        alert('Check!');
+      }
     });
   });
 };
